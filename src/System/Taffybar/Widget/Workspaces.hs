@@ -54,6 +54,7 @@ import           System.Taffybar.Widget.Generic.AutoSizeImage (autoSizeImage)
 import           System.Taffybar.Widget.Util
 import           System.Taffybar.WindowIcon
 import           Text.Printf
+import qualified GI.Gdk.Flags as Gdk
 
 data WorkspaceState
   = Active
@@ -843,6 +844,7 @@ buildButtonController contentsBuilder workspace = do
     ebox <- Gtk.eventBoxNew
     Gtk.containerAdd ebox widget
     Gtk.eventBoxSetVisibleWindow ebox False
+    Gtk.widgetAddEvents ebox [Gdk.EventMaskScrollMask]
     _ <-
       Gtk.onWidgetScrollEvent ebox $ \scrollEvent -> do
         dir <- Gdk.getEventScrollDirection scrollEvent
