@@ -837,7 +837,6 @@ data WorkspaceButtonController = WorkspaceButtonController
 buildButtonController :: ParentControllerConstructor
 buildButtonController contentsBuilder workspace = do
   cc <- contentsBuilder workspace
-  workspacesRef <- asks workspacesVar
   ctx <- ask
   widget <- getWidget cc
   lift $ do
@@ -848,19 +847,18 @@ buildButtonController contentsBuilder workspace = do
     _ <-
       Gtk.onWidgetScrollEvent ebox $ \scrollEvent -> do
         dir <- Gdk.getEventScrollDirection scrollEvent
-        workspaces <- liftIO $ MV.readMVar workspacesRef
-        let switchOne a =
+        let switchOne a end =
               liftIO $
               flip runReaderT ctx $
               liftX11Def
                 ()
-                (switchOneWorkspace a (length (M.toList workspaces) - 1)) >>
+                (switchOneWorkspace a end) >>
               return True
         case dir of
-          Gdk.ScrollDirectionUp -> switchOne True
-          Gdk.ScrollDirectionLeft -> switchOne True
-          Gdk.ScrollDirectionDown -> switchOne False
-          Gdk.ScrollDirectionRight -> switchOne False
+          Gdk.ScrollDirectionUp -> switchOne True 0
+          Gdk.ScrollDirectionLeft -> switchOne True 0
+          Gdk.ScrollDirectionDown -> switchOne False 10
+          Gdk.ScrollDirectionRight -> switchOne False 10
           _ -> return False
     _ <- Gtk.onWidgetButtonPressEvent ebox $ const $ switch ctx $ workspaceIdx workspace
     return $
