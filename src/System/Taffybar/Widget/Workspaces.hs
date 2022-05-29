@@ -842,24 +842,6 @@ buildButtonController contentsBuilder workspace = do
   lift $ do
     ebox <- Gtk.eventBoxNew
     Gtk.containerAdd ebox widget
-    Gtk.eventBoxSetVisibleWindow ebox False
-    Gtk.widgetAddEvents ebox [Gdk.EventMaskScrollMask]
-    _ <-
-      Gtk.onWidgetScrollEvent ebox $ \scrollEvent -> do
-        dir <- Gdk.getEventScrollDirection scrollEvent
-        let switchOne a end =
-              liftIO $
-              flip runReaderT ctx $
-              liftX11Def
-                ()
-                (switchOneWorkspace a end) >>
-              return True
-        case dir of
-          Gdk.ScrollDirectionUp -> switchOne True 0
-          Gdk.ScrollDirectionLeft -> switchOne True 0
-          Gdk.ScrollDirectionDown -> switchOne False 10
-          Gdk.ScrollDirectionRight -> switchOne False 10
-          _ -> return False
     _ <- Gtk.onWidgetButtonPressEvent ebox $ const $ switch ctx $ workspaceIdx workspace
     return $
       WWC
