@@ -266,13 +266,12 @@ liftContext prop = runX11 $ postX11RequestSyncProp prop ()
 wrapCallback :: Context -> GI.Gdk.EventScroll -> IO Bool
 wrapCallback context scrollEvent = do
   dir <- GI.Gdk.getEventScrollDirection scrollEvent
-  putStrLn "Poggers"
   _ <- case dir of
     GI.Gdk.ScrollDirectionUp -> flip runReaderT context $ liftContext $ switchOneWorkspace True 0
     GI.Gdk.ScrollDirectionLeft -> flip runReaderT context $ liftContext $ switchOneWorkspace True 0
     GI.Gdk.ScrollDirectionDown -> flip runReaderT context $ liftContext $ switchOneWorkspace False 10
     GI.Gdk.ScrollDirectionRight -> flip runReaderT context $ liftContext $ switchOneWorkspace False 10
-    _ -> putStrLn "Another" >> mempty
+    _ -> mempty
   return False
 
 buildBarWindow :: Context -> BarConfig -> IO Gtk.Window
