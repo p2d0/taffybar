@@ -9,13 +9,16 @@
 -- For more information on how to use wttr.in, see <https://wttr.in/:help>.
 module System.Taffybar.Widget.WttrIn (textWttrNew) where
 
-import Control.Exception as E (handle)
+import Conduit (MonadThrow)
+import Control.Exception as E (handle, throwIO, Exception)
 import Control.Monad.IO.Class (MonadIO)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy (toStrict)
 import Data.Maybe (isJust)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
+import qualified Debug.Trace as D
+import GHC.IO.Exception
 import GI.Gtk (Widget)
 import Network.HTTP.Client
   ( HttpException,
@@ -25,6 +28,7 @@ import Network.HTTP.Client
     httpLbs,
     newManager,
     parseRequest,
+    parseRequest_, Manager
   )
 import Network.HTTP.Types.Status (statusIsSuccessful)
 import System.Log.Logger (Priority (ERROR), logM)
@@ -59,32 +63,50 @@ callWttr url =
           Just strippedRsp -> T.length strippedRsp < T.length rsp
       isImage = isJust . matchRegex (mkRegex ".png")
       getResponseData r =
-        ( statusIsSuccessful $ responseStatus r,
+        ( D.trace (show r) statusIsSuccessful $ responseStatus r,
           toStrict $ responseBody r
         )
    in do
-        manager <- newManager defaultManagerSettings
-        request <- parseRequest url
+        manager <- handle logManagerError (newManager defaultManagerSettings)
+        request <-  handle logParseRequestError (parseRequest url)
         (isOk, response) <-
-          handle
+          D.trace "shittings shit" handle
             logException
-            ( getResponseData
+            ( D.trace "pepega" getResponseData
                 <$> httpLbs
                   (request {requestHeaders = [("User-Agent", "curl")]})
                   manager
             )
-        let body = decodeUtf8 response
+        let body = D.trace (show response) decodeUtf8 response
         return $
           if not isOk || isImage url || unknownLocation body
-            then "✨"
-            else body
+            then D.trace ("BODY: " ++ show body ++ "" ++ show (isOk || isImage url || unknownLocation body)) "✨"
+            else D.trace ("Body:" ++ show body) body
 
 -- Logs an Http Exception and returns wttr.in's weather unknown label.
 logException :: HttpException -> IO (Bool, ByteString)
 logException e = do
-  let errmsg = show e
+  let errmsg = D.trace "WUTFACE" show e
   logM
     "System.Taffybar.Widget.WttrIn"
     ERROR
     ("Warning: Couldn't call wttr.in. \n" ++ errmsg)
-  return (False, "✨")
+  throwIO e
+
+logParseRequestError :: HttpException -> IO Request
+logParseRequestError e = do
+  let errmsg = D.trace "WUTFACE" show e
+  logM
+    "System.Taffybar.Widget.WttrIn"
+    ERROR
+    ("Warning: Couldn't call wttr.in. \n" ++ errmsg)
+  throwIO e
+
+logManagerError :: IOException -> IO Manager
+logManagerError e = do
+  let errmsg = D.trace "WUTFACE" show e
+  logM
+    "System.Taffybar.Widget.WttrIn"
+    ERROR
+    ("Warning: Couldn't call wttr.in. \n" ++ errmsg)
+  throwIO e
