@@ -9,8 +9,6 @@ module System.Taffybar.Widget
   -- * "System.Taffybar.Widget.CommandRunner"
   , module System.Taffybar.Widget.CommandRunner
 
-  -- * "System.Taffybar.Widget.Crypto"
-  , module System.Taffybar.Widget.Crypto
 
   -- * "System.Taffybar.Widget.DiskIOMonitor"
   , module System.Taffybar.Widget.DiskIOMonitor
@@ -64,7 +62,6 @@ module System.Taffybar.Widget
 import System.Taffybar.Widget.Battery
 import System.Taffybar.Widget.CPUMonitor
 import System.Taffybar.Widget.CommandRunner
-import System.Taffybar.Widget.Crypto
 import System.Taffybar.Widget.DiskIOMonitor
 import System.Taffybar.Widget.FSMonitor
 import System.Taffybar.Widget.FreedesktopNotifications
